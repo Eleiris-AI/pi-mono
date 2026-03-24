@@ -2,6 +2,7 @@
  * Adapter registry — creates platform adapters from configuration.
  */
 
+export { SlackAdapter, type SlackAdapterConfig } from "./slack.js";
 export { TelegramAdapter, type TelegramAdapterConfig } from "./telegram.js";
 export type {
 	AdapterConfig,
@@ -16,6 +17,7 @@ export type {
 	UserInfo,
 } from "./types.js";
 
+import { SlackAdapter, type SlackAdapterConfig } from "./slack.js";
 import { TelegramAdapter, type TelegramAdapterConfig } from "./telegram.js";
 import type { AdapterConfig, PlatformAdapter } from "./types.js";
 
@@ -24,12 +26,13 @@ import type { AdapterConfig, PlatformAdapter } from "./types.js";
  */
 export function createAdapter(_name: string, config: AdapterConfig): PlatformAdapter {
 	switch (config.type) {
+		case "slack":
+			return new SlackAdapter(config as unknown as SlackAdapterConfig);
+
 		case "telegram":
 			return new TelegramAdapter(config as unknown as TelegramAdapterConfig);
 
 		// Future adapters:
-		// case "slack":
-		//   return new SlackAdapter(config as unknown as SlackAdapterConfig);
 		// case "discord":
 		//   return new DiscordAdapter(config as unknown as DiscordAdapterConfig);
 
