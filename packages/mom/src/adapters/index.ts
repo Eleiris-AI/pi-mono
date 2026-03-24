@@ -17,11 +17,13 @@ export type {
 	RespondOptions,
 	UserInfo,
 } from "./types.js";
+export { WhatsAppAdapter, type WhatsAppAdapterConfig } from "./whatsapp.js";
 
 import { DiscordAdapter, type DiscordAdapterConfig } from "./discord.js";
 import { SlackAdapter, type SlackAdapterConfig } from "./slack.js";
 import { TelegramAdapter, type TelegramAdapterConfig } from "./telegram.js";
 import type { AdapterConfig, PlatformAdapter } from "./types.js";
+import { WhatsAppAdapter, type WhatsAppAdapterConfig } from "./whatsapp.js";
 
 /**
  * Create an adapter from its configuration.
@@ -36,6 +38,9 @@ export function createAdapter(_name: string, config: AdapterConfig): PlatformAda
 
 		case "discord":
 			return new DiscordAdapter(config as unknown as DiscordAdapterConfig);
+
+		case "whatsapp":
+			return new WhatsAppAdapter(config as unknown as WhatsAppAdapterConfig);
 
 		default:
 			throw new Error(`Unknown adapter type: ${config.type}`);
