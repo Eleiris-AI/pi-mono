@@ -4,7 +4,8 @@
 	"description": "Slack bot that delegates messages to the pi coding agent",
 	"type": "module",
 	"bin": {
-		"mom": "dist/main.js"
+		"mom": "dist/main.js",
+		"mom-multi": "dist/multi.js"
 	},
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
@@ -14,7 +15,7 @@
 	],
 	"scripts": {
 		"clean": "shx rm -rf dist",
-		"build": "tsgo -p tsconfig.build.json && shx chmod +x dist/main.js",
+		"build": "tsgo -p tsconfig.build.json && shx chmod +x dist/main.js dist/multi.js",
 		"dev": "tsgo -p tsconfig.build.json --watch --preserveWatchOutput",
 		"prepublishOnly": "npm run clean && npm run build"
 	},
