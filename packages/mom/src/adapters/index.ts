@@ -40,6 +40,8 @@ export function createAdapter(_name: string, config: AdapterConfig): PlatformAda
 			return new DiscordAdapter(config as unknown as DiscordAdapterConfig);
 
 		case "whatsapp":
+			// ⚠️ See whatsapp.ts header for Meta policy restrictions (Jan 2026).
+			// General-purpose AI chatbots are prohibited on WhatsApp Business API.
 			return new WhatsAppAdapter(config as unknown as WhatsAppAdapterConfig);
 
 		default:

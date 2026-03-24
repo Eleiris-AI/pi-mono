@@ -5,9 +5,34 @@
  * Requires a Meta Business account, WhatsApp Business phone number,
  * and a webhook endpoint for receiving messages.
  *
+ * ⚠️  IMPORTANT POLICY WARNING — READ BEFORE DEPLOYING ⚠️
+ *
+ * As of January 15, 2026, Meta's WhatsApp Business API terms PROHIBIT
+ * general-purpose AI chatbots on the platform. This includes:
+ *
+ * - LLM-powered conversational assistants (e.g., ChatGPT, Perplexity)
+ * - Open-ended or assistant-style AI interactions
+ * - Services where the AI assistant is the primary product
+ * - Sending user messages to AI providers beyond serving that user
+ *
+ * ALLOWED use cases: structured, purpose-specific bots for customer
+ * support, bookings, order tracking, notifications, FAQ automation,
+ * and AI that enhances (not replaces) a defined business service.
+ *
+ * Using this adapter as a general-purpose AI assistant WILL LIKELY
+ * result in your phone number being banned by Meta. OpenAI, Perplexity,
+ * and Microsoft Copilot all had their WhatsApp bots shut down under
+ * this policy.
+ *
+ * Reference: https://faq.whatsapp.com/916543719558426
+ * See also: WhatsApp Business API Terms of Service (updated Oct 2025)
+ *
+ * This adapter is provided for COMPLIANT use cases only (structured
+ * business bots, notifications, purpose-specific workflows).
+ *
  * Architecture:
  * - Outbound: Direct HTTPS calls to graph.facebook.com
- * - Inbound: Express webhook server that Meta pushes messages to
+ * - Inbound: HTTP webhook server that Meta pushes messages to
  *
  * Key constraints:
  * - 24-hour customer service window (free replies after user messages)
@@ -108,6 +133,15 @@ export class WhatsAppAdapter implements PlatformAdapter {
 	async start(onMessage: OnMessageCallback, onStop: OnStopCallback): Promise<void> {
 		this.onMessage = onMessage;
 		this.onStop = onStop;
+
+		// ⚠️ Policy warning — displayed every time the adapter starts
+		log.logWarning(
+			"[whatsapp] POLICY WARNING",
+			"As of Jan 15 2026, Meta prohibits general-purpose AI chatbots on WhatsApp Business API. " +
+				"Only structured, purpose-specific bots (support, bookings, notifications) are allowed. " +
+				"Using this adapter as a general-purpose AI assistant may result in your number being banned. " +
+				"See: https://faq.whatsapp.com/916543719558426",
+		);
 
 		const port = this.config.webhookPort || 3000;
 		const path = this.config.webhookPath || "/webhook";
