@@ -15,7 +15,6 @@
 import {
 	Client,
 	type ClientOptions,
-	EmbedBuilder,
 	Events,
 	GatewayIntentBits,
 	type Guild,
@@ -50,7 +49,6 @@ export interface DiscordAdapterConfig {
 
 // Discord message limit is 2000 chars
 const DISCORD_MAX_LENGTH = 1900;
-const EMBED_DESC_MAX = 4000;
 
 // =============================================================================
 // Per-channel run state
@@ -202,28 +200,8 @@ export class DiscordAdapter implements PlatformAdapter {
 		await state.updatePromise;
 	}
 
-	async respondInThread(channelId: string, text: string): Promise<void> {
-		const state = this.getRunState(channelId);
-		state.updatePromise = state.updatePromise.then(async () => {
-			try {
-				// Create thread on the main message if we don't have one yet
-				if (!state.thread && state.message) {
-					state.thread = await state.message.startThread({
-						name: "Details",
-					});
-				}
-
-				if (state.thread) {
-					// Use embeds for tool results (cleaner than raw text)
-					const embed = new EmbedBuilder().setDescription(text.substring(0, EMBED_DESC_MAX)).setColor(0x5865f2); // Discord blurple
-
-					await state.thread.send({ embeds: [embed] });
-				}
-			} catch (err) {
-				log.logWarning("[discord] respondInThread error", err instanceof Error ? err.message : String(err));
-			}
-		});
-		await state.updatePromise;
+	async respondInThread(_channelId: string, _text: string): Promise<void> {
+		// No-op: only the main response is shown. Clean single-message UX.
 	}
 
 	async setTyping(channelId: string, _isTyping: boolean): Promise<void> {

@@ -53,7 +53,7 @@ interface ChannelRunState {
 
 // Slack mrkdwn message limit (40K, use 35K for safety)
 const MAX_MAIN_LENGTH = 35000;
-const MAX_THREAD_LENGTH = 20000;
+
 const TRUNCATION_NOTE = "\n\n_(message truncated, ask me to elaborate on specific parts)_";
 const WORKING_INDICATOR = " ...";
 
@@ -187,23 +187,9 @@ export class SlackAdapter implements PlatformAdapter {
 		await state.updatePromise;
 	}
 
-	async respondInThread(channelId: string, text: string): Promise<void> {
-		const state = this.getRunState(channelId);
-		state.updatePromise = state.updatePromise.then(async () => {
-			try {
-				if (state.messageTs && this.bot) {
-					let threadText = text;
-					if (threadText.length > MAX_THREAD_LENGTH) {
-						threadText = `${threadText.substring(0, MAX_THREAD_LENGTH - 50)}\n\n_(truncated)_`;
-					}
-					const ts = await this.bot.postInThread(channelId, state.messageTs, threadText);
-					state.threadMessageTs.push(ts);
-				}
-			} catch {
-				// Swallow
-			}
-		});
-		await state.updatePromise;
+	async respondInThread(_channelId: string, _text: string): Promise<void> {
+		// No-op: only the main response is shown. Tool details, usage stats,
+		// and duplicate responses are suppressed — clean single-message UX.
 	}
 
 	async setTyping(channelId: string, _isTyping: boolean): Promise<void> {

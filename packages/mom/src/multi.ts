@@ -136,11 +136,14 @@ function getState(adapterName: string, channelId: string): ChannelState {
 	const key = `${adapterName}/${channelId}`;
 	let state = channelStates.get(key);
 	if (!state) {
-		// Channel directory: <workingDir>/channels/<adapterName>/<channelId>/
-		const channelDir = join(workingDir, "channels", adapterName, channelId);
+		// Channel directory uses a flat compound ID that mom's agent.ts can parse.
+		// agent.ts derives workspacePath via channelDir.replace(`/${runnerId}`, ""),
+		// so we must ensure the runnerId matches the last path segment.
+		const compoundId = `${adapterName}-${channelId}`;
+		const channelDir = join(workingDir, compoundId);
 		state = {
 			running: false,
-			runner: getOrCreateRunner(sandbox, key, channelDir),
+			runner: getOrCreateRunner(sandbox, compoundId, channelDir),
 			store: new ChannelStore({ workingDir, botToken: "" }),
 			stopRequested: false,
 			adapterName,
