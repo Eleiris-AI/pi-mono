@@ -62,6 +62,7 @@ npm install @mariozechner/pi-mom
 # Set environment variables
 export MOM_SLACK_APP_TOKEN=xapp-...
 export MOM_SLACK_BOT_TOKEN=xoxb-...
+export MOM_ALLOWED_USERS=U09E2SACTB6
 # Option 1: Anthropic API key
 export ANTHROPIC_API_KEY=sk-ant-...
 # Option 2: use /login command in pi agent, then copy/link auth.json to ~/.pi/mom/
@@ -95,6 +96,7 @@ Options:
 |----------|-------------|
 | `MOM_SLACK_APP_TOKEN` | Slack app-level token (xapp-...) |
 | `MOM_SLACK_BOT_TOKEN` | Slack bot token (xoxb-...) |
+| `MOM_ALLOWED_USERS` | Optional comma-separated Slack member IDs allowed to interact with mom; if unset, all users are allowed |
 | `ANTHROPIC_API_KEY` | (Optional) Anthropic API key |
 
 ## Authentication

@@ -86,6 +86,29 @@ export interface MomHandler {
 }
 
 // ============================================================================
+// Access control
+// ============================================================================
+
+/**
+ * Parse allowed Slack user IDs from MOM_ALLOWED_USERS env var.
+ * Format: comma-separated Slack user IDs, e.g. "U01ABC123,U02DEF456"
+ * Returns null if the env var is not set → allow all (backward compat).
+ */
+function parseAllowedUsers(): Set<string> | null {
+	const raw = process.env.MOM_ALLOWED_USERS;
+	if (!raw?.trim()) return null;
+	return new Set(
+		raw
+			.split(",")
+			.map((s) => s.trim())
+			.filter(Boolean),
+	);
+}
+
+const ALLOWED_USER_IDS = parseAllowedUsers();
+const UNAUTHORIZED_MESSAGE = "Sorry, you're not authorized to use this bot.";
+
+// ============================================================================
 // Per-channel queue for sequential processing
 // ============================================================================
 
@@ -189,6 +212,10 @@ export class SlackBot {
 		return result.ts as string;
 	}
 
+	async postEphemeral(channel: string, user: string, text: string): Promise<void> {
+		await this.webClient.chat.postEphemeral({ channel, user, text });
+	}
+
 	async updateMessage(channel: string, ts: string, text: string): Promise<void> {
 		await this.webClient.chat.update({ channel, ts, text });
 	}
@@ -260,6 +287,23 @@ export class SlackBot {
 	// Private - Event Handlers
 	// ==========================================================================
 
+	private isAllowedUser(userId: string): boolean {
+		if (!ALLOWED_USER_IDS) return true; // No restriction configured → allow all
+		return ALLOWED_USER_IDS.has(userId);
+	}
+
+	private async notifyUnauthorizedUser(channelId: string, userId: string, isDM: boolean): Promise<void> {
+		try {
+			if (isDM) {
+				await this.postMessage(channelId, UNAUTHORIZED_MESSAGE);
+			} else {
+				await this.postEphemeral(channelId, userId, UNAUTHORIZED_MESSAGE);
+			}
+		} catch (err) {
+			log.logWarning("Unauthorized reply error", err instanceof Error ? err.message : String(err));
+		}
+	}
+
 	private getQueue(channelId: string): ChannelQueue {
 		let queue = this.queues.get(channelId);
 		if (!queue) {
@@ -294,6 +338,14 @@ export class SlackBot {
 				text: e.text.replace(/<@[A-Z0-9]+>/gi, "").trim(),
 				files: e.files,
 			};
+
+			// Access control — reject unauthorized users without invoking the LLM
+			if (!this.isAllowedUser(e.user)) {
+				log.logWarning(`[${e.channel}] Rejecting mention from unauthorized user: ${e.user}`);
+				void this.notifyUnauthorizedUser(e.channel, e.user, false);
+				ack();
+				return;
+			}
 
 			// SYNC: Log to log.jsonl (ALWAYS, even for old messages)
 			// Also downloads attachments in background and stores local paths
@@ -373,6 +425,16 @@ export class SlackBot {
 				text: (e.text || "").replace(/<@[A-Z0-9]+>/gi, "").trim(),
 				files: e.files,
 			};
+
+			// Access control — reject unauthorized DMs without invoking the LLM
+			if (!this.isAllowedUser(e.user)) {
+				log.logWarning(`[${e.channel}] Rejecting message from unauthorized user: ${e.user}`);
+				if (isDM) {
+					void this.notifyUnauthorizedUser(e.channel, e.user, true);
+				}
+				ack();
+				return;
+			}
 
 			// SYNC: Log to log.jsonl (ALL messages - channel chatter and DMs)
 			// Also downloads attachments in background and stores local paths
