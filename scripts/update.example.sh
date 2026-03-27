@@ -29,6 +29,17 @@ PRIVATE_BRANCHES=(
 
 cd "$REPO_ROOT"
 
+# Auto-reset generated files that often drift locally
+AUTO_RESET_FILES=(
+    "packages/ai/src/models.generated.ts"
+)
+
+for file in "${AUTO_RESET_FILES[@]}"; do
+    if git ls-files --error-unmatch "$file" >/dev/null 2>&1; then
+        git checkout HEAD -- "$file"
+    fi
+done
+
 # Abort if working tree is dirty
 if ! git diff --quiet || ! git diff --cached --quiet; then
     echo "error: working tree has uncommitted changes, commit or stash first"
