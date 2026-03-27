@@ -35,3 +35,6 @@ out.html
 packages/coding-agent/binaries/
 todo.md
 plans/
+
+# Local maintenance helpers (do not commit)
+/scripts/update.sh
